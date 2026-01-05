@@ -1,0 +1,63 @@
+[tools]
+python = "3.11"
+uv = "0.9.17"
+
+# https://mise.jdx.dev/mise-cookbook/python.html#mise-uv
+[env]
+_.python.venv = { path = ".venv" }
+
+[tasks.lint]
+run = "uvx pre-commit run --all-files"
+description = "Run pre-commit hooks"
+
+[tasks.test]
+run = "uv run pytest tests/"
+description = "Run tests with pytest"
+
+[tasks."test:cov"]
+run = "uv run pytest tests/ --cov=immich --cov-report=html --cov-report=term"
+description = "Run tests with coverage report"
+
+[tasks.install]
+run = "uv sync"
+alias = "i"
+description = "Install dependencies (alias: 'i')"
+
+[tasks."install:upgrade"]
+run = "uv sync --upgrade"
+description = "Upgrade dependencies in the allowed ranges"
+
+[tasks."install:check"]
+run = "uv tree --outdated --depth 1"
+description = "Check dependencies for updates"
+
+[tasks.setup]
+run = ["mise install", "uvx pre-commit install"]
+description = "Setup the project"
+
+[tasks.build]
+run = "uv build"
+description = "Build the package"
+
+[tasks."version:dry"]
+run = "uvx --from 'python-semantic-release==10.4.1' semantic-release --noop -c pyproject.toml version"
+description = "Dry run version bump"
+
+[tasks.generate]
+description = "Generate Immich API client (alias: 'g')"
+alias = "g"
+run = '''
+set -eu
+uv run bin/generate.py
+'''
+
+[tasks.ci]
+description = "Run generate then lint sequentially (CI helper)"
+run = [
+    { task = "generate" },
+    { task = "lint" },
+]
+
+[tasks.clean]
+run = "rm -rf build/ dist/ *.egg-info/ .pytest_cache/ htmlcov/ .coverage .ruff_cache/"
+description = "Clean build artifacts and cache files"

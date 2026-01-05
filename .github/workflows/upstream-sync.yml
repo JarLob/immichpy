@@ -1,0 +1,166 @@
+name: Upstream Immich Sync
+
+on:
+  schedule:
+    # Run every hour
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: upstream-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install uv + Python
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.9.17"
+          python-version: "3.11"
+
+      - name: Install mise
+        uses: jdx/mise-action@v2
+
+      - name: Install project dependencies
+        run: uv sync --locked --dev
+
+      - name: Fetch latest stable Immich tag
+        id: fetch_tag
+        run: |
+          # Fetch all tags from immich-app/immich
+          TAGS=$(git ls-remote --tags --sort='-v:refname' https://github.com/immich-app/immich.git | grep -E 'refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
+
+          if [ -z "$TAGS" ]; then
+            exit 1
+          fi
+
+          # Extract tag name (format: <sha>	refs/tags/v1.2.3)
+          LATEST_TAG=$(echo "$TAGS" | sed 's/.*refs\/tags\///')
+
+          echo "latest_tag=$LATEST_TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Read stored upstream tag
+        id: stored_tag
+        run: |
+          STATE_FILE="IMMICH-VERSION"
+          if [ -f "$STATE_FILE" ]; then
+            STORED_TAG=$(cat "$STATE_FILE" | tr -d '[:space:]')
+            echo "stored_tag=$STORED_TAG" >> "$GITHUB_OUTPUT"
+          else
+            echo "stored_tag=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check if sync is needed
+        id: check_sync
+        run: |
+          LATEST_TAG="${{ steps.fetch_tag.outputs.latest_tag }}"
+          STORED_TAG="${{ steps.stored_tag.outputs.stored_tag }}"
+
+          if [ "$LATEST_TAG" = "$STORED_TAG" ]; then
+            echo "sync_needed=false" >> "$GITHUB_OUTPUT"
+            echo "No new tag: $LATEST_TAG"
+            exit 0
+          fi
+
+          echo "sync_needed=true" >> "$GITHUB_OUTPUT"
+          echo "New tag found: $LATEST_TAG (was $STORED_TAG)"
+
+      - name: Determine commit message type
+        id: commit_msg
+        if: steps.check_sync.outputs.sync_needed == 'true'
+        run: |
+          LATEST_TAG="${{ steps.fetch_tag.outputs.latest_tag }}"
+          STORED_TAG="${{ steps.stored_tag.outputs.stored_tag }}"
+
+          # Remove 'v' prefix for comparison
+          LATEST_VERSION=$(echo "$LATEST_TAG" | sed 's/^v//')
+          STORED_VERSION=$(echo "$STORED_TAG" | sed 's/^v//')
+
+          # If no stored tag, default to feat
+          if [ -z "$STORED_TAG" ]; then
+            COMMIT_TYPE="feat"
+            COMMIT_BODY="Synced client with immich $LATEST_TAG"
+            echo "commit_type=$COMMIT_TYPE" >> "$GITHUB_OUTPUT"
+            echo "commit_body=$COMMIT_BODY" >> "$GITHUB_OUTPUT"
+            {
+              echo "commit_message<<'EOF'"
+              echo "$COMMIT_TYPE: sync immich $LATEST_TAG"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Parse version components
+          IFS='.' read -r LATEST_MAJOR LATEST_MINOR LATEST_PATCH <<< "$LATEST_VERSION"
+          IFS='.' read -r STORED_MAJOR STORED_MINOR STORED_PATCH <<< "$STORED_VERSION"
+
+          # Determine commit type based on semver diff
+          if [ "$LATEST_MAJOR" != "$STORED_MAJOR" ]; then
+            # Major version bump
+            COMMIT_TYPE="feat!"
+            COMMIT_BODY=$'Synced client with immich '"$LATEST_TAG"$'\n\nBREAKING CHANGE: Sync generated client to Immich '"$LATEST_TAG"
+          elif [ "$LATEST_MINOR" != "$STORED_MINOR" ]; then
+            # Minor version bump
+            COMMIT_TYPE="feat"
+            COMMIT_BODY="Synced client with immich $LATEST_TAG"
+          else
+            # Patch version bump
+            COMMIT_TYPE="fix"
+            COMMIT_BODY="Synced client with immich $LATEST_TAG"
+          fi
+
+          echo "commit_type=$COMMIT_TYPE" >> "$GITHUB_OUTPUT"
+          echo "commit_body=$COMMIT_BODY" >> "$GITHUB_OUTPUT"
+
+          {
+            echo "commit_message<<'EOF'"
+            echo "$COMMIT_TYPE: sync immich $LATEST_TAG"
+            if [ -n "$COMMIT_BODY" ]; then
+              echo ""
+              echo "$COMMIT_BODY"
+            fi
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Run CI (generate + lint)
+        if: steps.check_sync.outputs.sync_needed == 'true'
+        env:
+          IMMICH_OPENAPI_REF: ${{ steps.fetch_tag.outputs.latest_tag }}
+        run: mise run ci
+
+      - name: Update stored tag file
+        if: steps.check_sync.outputs.sync_needed == 'true'
+        run: |
+          LATEST_TAG="${{ steps.fetch_tag.outputs.latest_tag }}"
+          echo "$LATEST_TAG" > IMMICH-VERSION
+
+      - name: Create or update PR (dev -> main)
+        if: steps.check_sync.outputs.sync_needed == 'true'
+        uses: peter-evans/create-pull-request@v8
+        with:
+          commit-message: ${{ steps.commit_msg.outputs.commit_message }}
+          committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          branch: dev
+          base: main
+          title: Sync Immich ${{ steps.fetch_tag.outputs.latest_tag }}
+          body: |
+            Automatically generated sync to Immich ${{ steps.fetch_tag.outputs.latest_tag }}.
+
+            This PR was created by the upstream sync workflow.
+
+            Upstream tag: https://github.com/immich-app/immich/releases/tag/${{ steps.fetch_tag.outputs.latest_tag }}
+          delete-branch: false
+
