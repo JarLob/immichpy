@@ -42,7 +42,7 @@ jobs:
       - name: Setup | Install uv + Python
         uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7
         with:
-          version: "0.9"
+          version: "0.9.21"
           python-version: "3.11"
 
       - name: Evaluate | Verify upstream has NOT changed
