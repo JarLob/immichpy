@@ -14,7 +14,7 @@ from immich.client_wrapper.assets_api_wrapped import AssetsApiWrapped
 from immich.client.api.authentication_admin_api import AuthenticationAdminApi
 from immich.client.api.authentication_api import AuthenticationApi
 from immich.client.api.deprecated_api import DeprecatedApi
-from immich.client.api.download_api import DownloadApi
+from immich.client_wrapper.download_api_wrapped import DownloadApiWrapped
 from immich.client.api.duplicates_api import DuplicatesApi
 from immich.client.api.faces_api import FacesApi
 from immich.client.api.jobs_api import JobsApi
@@ -40,7 +40,7 @@ from immich.client.api.tags_api import TagsApi
 from immich.client.api.timeline_api import TimelineApi
 from immich.client.api.trash_api import TrashApi
 from immich.client.api.users_admin_api import UsersAdminApi
-from immich.client.api.users_api import UsersApi
+from immich.client_wrapper.users_api_wrapped import UsersApiWrapped
 from immich.client.api.views_api import ViewsApi
 from immich.client.api.workflows_api import WorkflowsApi
 
@@ -116,7 +116,7 @@ class AsyncClient:
     https://api.immich.app/endpoints/deprecated
     """
 
-    download: DownloadApi
+    download: DownloadApiWrapped
     """Endpoints for downloading assets or collections of assets.
 
     https://api.immich.app/endpoints/download
@@ -272,7 +272,7 @@ class AsyncClient:
     https://api.immich.app/endpoints/users-(admin)
     """
 
-    users: UsersApi
+    users: UsersApiWrapped
     """Endpoints for viewing and updating the current users, including product key information, profile picture data, onboarding progress, and more.
 
     https://api.immich.app/endpoints/users
@@ -322,7 +322,7 @@ class AsyncClient:
         self.authentication = AuthenticationApi(self.base_client)
         self.authentication_admin = AuthenticationAdminApi(self.base_client)
         self.deprecated = DeprecatedApi(self.base_client)
-        self.download = DownloadApi(self.base_client)
+        self.download = DownloadApiWrapped(self.base_client)
         self.duplicates = DuplicatesApi(self.base_client)
         self.faces = FacesApi(self.base_client)
         self.jobs = JobsApi(self.base_client)
@@ -347,7 +347,7 @@ class AsyncClient:
         self.tags = TagsApi(self.base_client)
         self.timeline = TimelineApi(self.base_client)
         self.trash = TrashApi(self.base_client)
-        self.users = UsersApi(self.base_client)
+        self.users = UsersApiWrapped(self.base_client)
         self.users_admin = UsersAdminApi(self.base_client)
         self.views = ViewsApi(self.base_client)
         self.workflows = WorkflowsApi(self.base_client)
