@@ -18,8 +18,8 @@
 Unofficial Python client for the [Immich](https://immich.app) API.
 
 > [!IMPORTANT]
-> This repository is **auto-generated** from the Immich OpenAPI specification.
-> **Do not open pull requests**. See [CONTRIBUTING](CONTRIBUTING.md) for more details.
+> This repository is mostly **auto-generated** from the Immich OpenAPI specification.
+> Pull requests are welcome, but **modifications to auto-generated code (especially `immich/client/`) will be rejected**. See [CONTRIBUTING](CONTRIBUTING.md) for more details.
 
 ## Status
 

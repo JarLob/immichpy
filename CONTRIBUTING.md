@@ -2,15 +2,33 @@
 
 This repository is **auto-generated** from the Immich OpenAPI specification.
 
-## We do not accept pull requests
+## Pull requests
 
-Please **do not open PRs** against this repository. They will be closed.
+Pull requests are welcome! However, **modifications to auto-generated code will be rejected**.
+
+### Auto-generated code restrictions
+
+The following directories contain auto-generated code and **must not be modified**:
+
+- `immich/client/` - All files in this directory are auto-generated from the Immich OpenAPI specification
+- Any other auto-generated files
 
 The generated client is updated by automation:
 
 - Generate client from the upstream Immich release
 - Commit to `main` via an automation PR
 - Tag + release to PyPI
+
+### What can be contributed
+
+You can contribute to:
+
+- Custom wrapper functions in `immich/client_wrapper/`
+- Utility functions in `immich/utils.py`
+- SDK-level code in `immich/sdk.py`
+- Tests in `tests/`
+- Documentation improvements
+- Build and development tooling
 
 ## Where to report issues
 
