@@ -5,5 +5,17 @@
   ],
   "schedule": ["* * 1 * *"],
   "description": "Schedule monthly on the first day of the month",
-  "minimumReleaseAge": "3 days"
+  "minimumReleaseAge": "3 days",
+  "packageRules": [
+    {
+      "groupName": "uv toolchain",
+      "groupSlug": "uv",
+      "matchPackageNames": [
+        "uv",
+        "uv_build",
+        "astral-sh/uv",
+        "astral-sh/setup-uv"
+      ]
+    }
+  ]
 }
