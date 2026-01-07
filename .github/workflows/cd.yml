@@ -6,9 +6,6 @@ on:
   push:
     branches: [main]
 
-permissions:
-  contents: read
-
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -27,6 +24,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     permissions:
+      contents: write
       pull-requests: write
 
     strategy:
@@ -84,7 +82,7 @@ jobs:
         run: |
           git reset --hard ${TRIGGER_SHA}
         env:
-          TRIGGER_SHA: ${{ github.event.workflow_run.head_sha }}
+          TRIGGER_SHA: ${{ github.sha }}
 
       - name: Action | Semantic Version Release
         id: release
