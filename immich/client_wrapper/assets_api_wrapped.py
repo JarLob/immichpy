@@ -6,9 +6,20 @@ from uuid import UUID
 
 from pydantic import StrictStr
 
+from immich.client.api.albums_api import AlbumsApi
 from immich.client.api.assets_api import AssetsApi
+from immich.client.api.server_api import ServerApi
 from immich.client.models.asset_media_size import AssetMediaSize
-from immich.utils import download_file, resolve_output_filename
+from immich._internal.upload import (
+    UploadResult,
+    UploadStats,
+    check_duplicates as check_dupes,
+    delete_files,
+    scan_files,
+    update_albums,
+    upload_files,
+)
+from immich._internal.download import download_file, resolve_output_filename
 
 
 class AssetsApiWrapped(AssetsApi):
@@ -151,4 +162,99 @@ class AssetsApiWrapped(AssetsApi):
                 default_base=f"thumb-{id}",
             ),
             show_progress=show_progress,
+        )
+
+    async def upload(
+        self,
+        paths: Path | list[Path] | str | list[str],
+        *,
+        ignore_pattern: Optional[str] = None,
+        include_hidden: bool = False,
+        check_duplicates: bool = True,
+        concurrency: int = 5,
+        show_progress: bool = True,
+        include_sidecars: bool = True,
+        album_name: Optional[str] = None,
+        delete_after_upload: bool = False,
+        delete_duplicates: bool = False,
+        dry_run: bool = False,
+    ) -> UploadResult:
+        """
+        Upload assets with smart features (duplicate detection, album management, sidecar support, dry run).
+
+        :param paths: File or directory paths to upload. Can be a single path or list of paths. Directories are automatically walked recursively. To ignore subdirectories, use the `ignore_pattern` parameter.
+        :param ignore_pattern: Wildcard pattern to ignore files (uses `fnmatch` stdlib module, not regex). Examples: "*.tmp" (ignore all .tmp files), "*/subdir/*" (ignore files in subdir at any level).
+        :param include_hidden: Whether to include hidden files (starting with ".").
+        :param check_duplicates: Whether to check for duplicates using SHA1 hashes before uploading.
+        :param concurrency: Number of concurrent uploads. Defaults to 5. A higher number may increase upload speed, but also increases the risk of rate limiting or other issues.
+        :param show_progress: Whether to show progress bars.
+        :param include_sidecars: Whether to automatically detect and upload XMP sidecar files.
+        :param album_name: Album name to create or use. If None, no album operations are performed.
+        :param delete_after_upload: Whether to delete successfully uploaded files locally.
+        :param delete_duplicates: Whether to delete duplicate files locally.
+        :param dry_run: If True, simulate uploads without actually uploading.
+
+        :return: UploadResult with uploaded assets, rejected files, failures, and statistics.
+        """
+        if concurrency < 1:
+            raise ValueError("concurrency must be >= 1")
+        server_api = ServerApi(self.api_client)
+        albums_api = AlbumsApi(self.api_client)
+
+        _paths = [paths] if isinstance(paths, (str, Path)) else paths
+        _paths = [Path(p) for p in _paths]
+
+        files = await scan_files(_paths, server_api, ignore_pattern, include_hidden)
+        if not files:
+            return UploadResult(
+                uploaded=[],
+                rejected=[],
+                failed=[],
+                stats=UploadStats(total=0, uploaded=0, rejected=0, failed=0),
+            )
+
+        new_files, checked_rejected = await check_dupes(
+            files=files,
+            assets_api=self,
+            check_duplicates=check_duplicates,
+            show_progress=show_progress,
+        )
+
+        uploaded, actual_rejected, failed = await upload_files(
+            files=new_files,
+            assets_api=self,
+            concurrency=concurrency,
+            show_progress=show_progress,
+            include_sidecars=include_sidecars,
+            dry_run=dry_run,
+        )
+
+        if album_name and not dry_run:
+            await update_albums(
+                uploaded=uploaded, album_name=album_name, albums_api=albums_api
+            )
+
+        # we can either check pre-upload rejected files or on-upload rejected files, so we return the appropriate list
+        # alternative would be to use both lists and deduplicate by asset_id, however adds overhead and assumes the API returned different results
+        rejected = checked_rejected if check_duplicates else actual_rejected
+
+        await delete_files(
+            uploaded=uploaded,
+            rejected=rejected,
+            delete_after_upload=delete_after_upload,
+            delete_duplicates=delete_duplicates,
+            include_sidecars=include_sidecars,
+            dry_run=dry_run,
+        )
+
+        return UploadResult(
+            uploaded=uploaded,
+            rejected=rejected,
+            failed=failed,
+            stats=UploadStats(
+                total=len(files),
+                uploaded=len(uploaded),
+                rejected=len(rejected),
+                failed=len(failed),
+            ),
         )

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import uuid
+from uuid import UUID, uuid4
 from pathlib import Path
 from typing import Any, Optional
 
@@ -10,7 +10,7 @@ from pydantic import StrictStr
 from immich.client.api.download_api import DownloadApi
 from immich.client.models.asset_ids_dto import AssetIdsDto
 from immich.client.models.download_info_dto import DownloadInfoDto
-from immich.utils import download_file
+from immich._internal.download import download_file
 
 
 class DownloadApiWrapped(DownloadApi):
@@ -50,7 +50,12 @@ class DownloadApiWrapped(DownloadApi):
             download_info, key=key, slug=slug, **kwargs
         )
         archive_requests: list[tuple[AssetIdsDto, int]] = [
-            (AssetIdsDto(asset_ids=archive.asset_ids), int(archive.size))
+            (
+                AssetIdsDto(
+                    asset_ids=[UUID(str(asset_id)) for asset_id in archive.asset_ids]
+                ),
+                int(archive.size),
+            )
             for archive in info.archives
         ]
 
@@ -67,7 +72,7 @@ class DownloadApiWrapped(DownloadApi):
         )
         try:
             for asset_ids_dto, expected_size in archive_requests:
-                filename = f"archive-{uuid.uuid4()}.zip"
+                filename = f"archive-{uuid4()}.zip"
 
                 def make_request(extra_headers: Optional[dict[str, str]]):
                     return self.download_archive_without_preload_content(
