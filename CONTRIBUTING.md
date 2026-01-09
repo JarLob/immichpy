@@ -32,7 +32,7 @@ The generated client is updated by automation:
 You can contribute to:
 
 - Custom wrapper functions in `immich/client_wrapper/`
-- Utility functions in `immich/utils.py`
+- Internal functions in `immich/_internal/`
 - SDK-level code in `immich/sdk.py`
 - Tests in `tests/`
 - Documentation improvements
@@ -48,5 +48,3 @@ When reporting, include:
 - The `IMMICH-VERSION` from this repo
 - The Immich server version you are running
 - A minimal reproduction (request/response or endpoint + payload)
-
-
