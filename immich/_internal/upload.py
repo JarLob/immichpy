@@ -114,6 +114,8 @@ async def scan_files(
     for path in paths:
         path = path.resolve()
         if path.is_file():
+            if not include_hidden and any(part.startswith(".") for part in path.parts):
+                continue
             if path.suffix.lower() in extensions:
                 if ignore_pattern and fnmatch.fnmatch(str(path), f"*{ignore_pattern}"):
                     continue

@@ -123,7 +123,10 @@ async def test_scan_files_ignore_pattern_directory(
 
 
 @pytest.mark.asyncio
-async def test_scan_files_exclude_hidden_files(mock_server_api, tmp_path: Path) -> None:
+async def test_scan_files_exclude_hidden_dir_path(
+    mock_server_api, tmp_path: Path
+) -> None:
+    """Test that hidden files are excluded when scanning a directory."""
     file1 = tmp_path / "test.jpg"
     file2 = tmp_path / ".hidden.jpg"
     file1.write_bytes(b"test1")
@@ -134,7 +137,10 @@ async def test_scan_files_exclude_hidden_files(mock_server_api, tmp_path: Path) 
 
 
 @pytest.mark.asyncio
-async def test_scan_files_include_hidden_files(mock_server_api, tmp_path: Path) -> None:
+async def test_scan_files_include_hidden_dir_path(
+    mock_server_api, tmp_path: Path
+) -> None:
+    """Test that hidden files are included when scanning a directory."""
     file1 = tmp_path / "test.jpg"
     file2 = tmp_path / ".hidden.jpg"
     file1.write_bytes(b"test1")
@@ -142,6 +148,29 @@ async def test_scan_files_include_hidden_files(mock_server_api, tmp_path: Path) 
     result = await scan_files([tmp_path], mock_server_api, include_hidden=True)
     assert len(result) == 2
     assert set(result) == {file1.resolve(), file2.resolve()}
+
+
+@pytest.mark.asyncio
+async def test_scan_files_exclude_hidden_file_path(
+    mock_server_api, tmp_path: Path
+) -> None:
+    """Test that hidden files are excluded when passed as a single file path."""
+    file = tmp_path / ".hidden.jpg"
+    file.write_bytes(b"test1")
+    result = await scan_files([file], mock_server_api, include_hidden=False)
+    assert len(result) == 0
+
+
+@pytest.mark.asyncio
+async def test_scan_files_include_hidden_file_path(
+    mock_server_api, tmp_path: Path
+) -> None:
+    """Test that hidden files are included when passed as a single file path."""
+    file = tmp_path / ".hidden.jpg"
+    file.write_bytes(b"test1")
+    result = await scan_files([file], mock_server_api, include_hidden=True)
+    assert len(result) == 1
+    assert result[0] == file.resolve()
 
 
 @pytest.mark.asyncio
