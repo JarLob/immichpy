@@ -29,11 +29,6 @@ A Python client and CLI for interacting with the [Immich](https://immich.app) se
 
 For full documentation, visit [immich-py.timonrieger.de](https://immich-py.timonrieger.de).
 
-## About
-
-- [Credits](https://immich-py.timonrieger.de/credits/)
-- [Contributing](https://immich-py.timonrieger.de/contributing/)
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

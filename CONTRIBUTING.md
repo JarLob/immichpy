@@ -1,1 +1,1 @@
-Please read the [Contributing](https://immich-py.timonrieger.de/contributing/) guidelines in the documentation site.
+Please read the [Contributing](https://immich-py.timonrieger.de/info/contributing) guidelines in the documentation site.
