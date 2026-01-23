@@ -7,6 +7,7 @@ from typing import Optional
 from importlib.metadata import version
 
 from click.core import ParameterSource
+from rich.console import Console
 
 from immich.cli.consts import (
     API_KEY_URL,
@@ -22,10 +23,9 @@ from immich.cli.utils import resolve_client_config, mask, print_
 
 try:
     import typer
-    from rich.console import Console
 except ImportError:  # pragma: no cover
     print(
-        "Error: CLI dependencies not installed. Install with: pip install immich[cli]",
+        "Error: CLI dependencies not installed. Install with: pip install immich[cli] or uv add immich --extra cli",
         file=sys.stderr,
     )
     sys.exit(1)
