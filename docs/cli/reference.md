@@ -58,6 +58,7 @@ $ immich [OPTIONS] COMMAND [ARGS]...
 * `users-admin`: Administrative endpoints for managing...
 * `views`: Endpoints for specialized views, such as...
 * `workflows`: A workflow is a set of actions that run...
+* `backups`: Manage backups of the Immich database.
 
 ## `immich setup`
 
@@ -6164,4 +6165,114 @@ $ immich workflows update-workflow [OPTIONS] ID
 * `--filters TEXT`: As a JSON string
 * `--name TEXT`
 * `--trigger-type TEXT`
+* `--help`: Show this message and exit.
+
+## `immich backups`
+
+Manage backups of the Immich database.
+
+<a href="https://api.immich.app/endpoints/database-backups-admin">Immich API documentation</a>
+
+**Usage**:
+
+```console
+$ immich backups [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `delete-database-backup`: Delete database backup
+* `download-database-backup`: Download database backup
+* `list-database-backups`: List database backups
+* `start-database-restore-flow`: Start database backup restore flow
+* `upload-database-backup`: Upload database backup
+
+### `immich backups delete-database-backup`
+
+Delete database backup
+
+<a href="https://api.immich.app/endpoints/database-backups-admin/deleteDatabaseBackup">Immich API documentation</a>
+
+**Usage**:
+
+```console
+$ immich backups delete-database-backup [OPTIONS]
+```
+
+**Options**:
+
+* `--backups TEXT`: [required]
+* `--help`: Show this message and exit.
+
+### `immich backups download-database-backup`
+
+Download database backup
+
+<a href="https://api.immich.app/endpoints/database-backups-admin/downloadDatabaseBackup">Immich API documentation</a>
+
+**Usage**:
+
+```console
+$ immich backups download-database-backup [OPTIONS] FILENAME
+```
+
+**Arguments**:
+
+* `FILENAME`: [required]
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+### `immich backups list-database-backups`
+
+List database backups
+
+<a href="https://api.immich.app/endpoints/database-backups-admin/listDatabaseBackups">Immich API documentation</a>
+
+**Usage**:
+
+```console
+$ immich backups list-database-backups [OPTIONS]
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+### `immich backups start-database-restore-flow`
+
+Start database backup restore flow
+
+<a href="https://api.immich.app/endpoints/database-backups-admin/startDatabaseRestoreFlow">Immich API documentation</a>
+
+**Usage**:
+
+```console
+$ immich backups start-database-restore-flow [OPTIONS]
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+### `immich backups upload-database-backup`
+
+Upload database backup
+
+<a href="https://api.immich.app/endpoints/database-backups-admin/uploadDatabaseBackup">Immich API documentation</a>
+
+**Usage**:
+
+```console
+$ immich backups upload-database-backup [OPTIONS]
+```
+
+**Options**:
+
+* `--file PATH`
 * `--help`: Show this message and exit.
