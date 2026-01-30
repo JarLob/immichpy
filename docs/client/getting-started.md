@@ -1,5 +1,8 @@
 # Getting Started
 
+!!! info "Why immich-py?"
+    Looking for a stable, ecosystem-aligned API client? Read the [adoption rationale](../overview/why.md).
+
 ## Installation
 
 You need Python 3.10–3.14 installed to be able to use this library.
