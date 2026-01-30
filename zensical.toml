@@ -67,6 +67,7 @@ nav = [
     ] },
     { Client = [
         "client/getting-started.md",
+        "client/adoption-guide.md",
         "client/response-types.md",
         "client/session-management.md",
         { Reference = [
