@@ -70,7 +70,7 @@ nav = [
         "client/integration-guide.md",
         "client/response-types.md",
         "client/exception-handling.md",
-        "client/session-management.md",
+        "client/configuration.md",
         { Reference = [
             {"Reference" = "client/reference/index.md"},
             {"Exceptions" = "client/reference/exceptions.md"},
